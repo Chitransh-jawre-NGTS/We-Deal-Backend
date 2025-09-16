@@ -12,7 +12,7 @@ app.use(express.json());
 
 // ✅ Enable CORS
 app.use(cors({
-  origin: "http://localhost:5173",  // replace with your frontend URL
+  origin:[ "http://localhost:5173", "https://we-deal-backend.onrender.com" ],  // replace with your frontend URL
   credentials: true
 }));
 
