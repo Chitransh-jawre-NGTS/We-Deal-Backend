@@ -13,7 +13,7 @@ router.post("/create", upload.array("images", 8), createProduct);
 router.get("/get-products", getAllProducts);
 
 // GET products by user
-router.get("/user/:userId", getUserProducts);
+router.get("/product/:userId", getUserProducts);
 
 
 module.exports = router;
