@@ -3,7 +3,10 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
 const auth = async (req, res, next) => {
-    console.log("Auth middleware invoked"); // Debugging
+  console.log("Auth middleware invoked");
+  console.log("Headers received:", req.headers);
+  console.log("Authorization header:", req.headers.authorization);
+
   try {
     const token = req.headers.authorization?.split(" ")[1]; // Bearer <token>
     if (!token) return res.status(401).json({ message: "No token provided" });
@@ -16,6 +19,7 @@ const auth = async (req, res, next) => {
     next();
   } catch (err) {
     res.status(401).json({ message: "Unauthorized", error: err.message });
+    console.error("Auth error:", err);
   }
 };
 
