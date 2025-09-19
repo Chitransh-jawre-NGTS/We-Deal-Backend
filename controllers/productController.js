@@ -84,3 +84,61 @@ exports.getUserProducts = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch user products" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+// const sharp = require("sharp");
+// const fs = require("fs");
+// const path = require("path");
+
+// exports.createProduct = async (req, res) => {
+//   try {
+//     const fields = req.body.fields ? JSON.parse(req.body.fields) : null;
+//     if (!fields) return res.status(400).json({ message: "fields are required" });
+
+//     const category = req.body.category;
+//     const sellerId = req.user.id;
+
+//     const uploadPromises = req.files.map(async (file) => {
+//       const compressedPath = path.join(__dirname, "../uploads", `compressed-${file.filename}.jpg`);
+
+//       await sharp(file.path)
+//         .resize(1200) // max width
+//         .jpeg({ quality: 80 }) // adjust quality
+//         .toFile(compressedPath);
+
+//       const result = await cloudinary.uploader.upload(compressedPath, {
+//         folder: "products",
+//       });
+
+//       // Cleanup local file
+//       fs.unlinkSync(compressedPath);
+
+//       return result.secure_url;
+//     });
+
+//     const images = await Promise.all(uploadPromises);
+
+//     const product = new Product({
+//       fields,
+//       category,
+//       sellerId,
+//       images,
+//       location: JSON.parse(req.body.location || "{}"),
+//     });
+
+//     await product.save();
+//     res.status(201).json({ message: "Product created", product });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(400).json({ message: "Failed to create product", error: err });
+//   }
+// };
