@@ -5,6 +5,8 @@ const chatSchema = new mongoose.Schema(
   {
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // two or more users
     lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" }
+
   },
   { timestamps: true }
 );

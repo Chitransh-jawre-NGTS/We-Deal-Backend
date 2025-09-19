@@ -74,6 +74,7 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 exports.updateProfile = async (req, res) => {
+  console.log("hit update id ")
   try {
     const userId = req.params.id; // user ID from route param or JWT
     const { name, email, aadhaarNumber } = req.body;
@@ -96,5 +97,20 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+exports.getProfile = async (req, res) => {
+  try {
+    const userId = req.user?._id; // get user ID from middleware
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const user = await User.findById(userId).select("-__v");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };

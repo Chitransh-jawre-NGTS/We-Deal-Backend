@@ -1,42 +1,75 @@
 const Product = require("../models/product");
 const cloudinary = require("../config/cloudinary");
 
-// Create product
+// controllers/productController.js
 exports.createProduct = async (req, res) => {
   try {
-    const { fields, category } = req.body;
-    const images = req.files.map((file) => file.path); // if using multer/cloudinary
+    // Parse JSON fields from FormData
+    const fields = req.body.fields ? JSON.parse(req.body.fields) : null;
+    if (!fields) return res.status(400).json({ message: "fields are required" });
 
-    // Get sellerId from authenticated user
+    const category = req.body.category;
+    const images = req.files.map((file) => file.path);
     const sellerId = req.user.id;
 
+    // Parse location if sent
+    let locationData = null;
+    if (req.body.location) {
+      try {
+        locationData = JSON.parse(req.body.location);
+      } catch (err) {
+        console.warn("Invalid location data:", err);
+      }
+    }
+
+    if (!locationData || !Array.isArray(locationData.coordinates)) {
+      return res.status(400).json({ message: "Valid location with coordinates is required" });
+    }
+
     const product = new Product({
-      fields: JSON.parse(fields),
+      fields,
       category,
+      sellerId,
       images,
-      sellerId, // 👈 add sellerId here
+      location: locationData,
     });
 
     await product.save();
 
-    res.status(201).json(product);
+    res.status(201).json({ message: "Product created", product });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to create product" });
+    res.status(400).json({ message: "Failed to create product", error: err });
   }
 };
+
+
+
+
 
 
 // Get all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }); // latest first
-    res.status(200).json({ products });
+    const products = await Product.find().sort({ createdAt: -1 });
+
+    const updatedProducts = products.map((product) => {
+      const now = new Date();
+      if (product.expiryDate && product.expiryDate < now) {
+        product.status = "expired";
+      } else {
+        product.status = "active";
+      }
+      return product;
+    });
+
+    res.status(200).json({ products: updatedProducts });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 // Get products by user
 exports.getUserProducts = async (req, res) => {
