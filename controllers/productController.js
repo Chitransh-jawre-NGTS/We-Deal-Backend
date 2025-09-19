@@ -1,3 +1,4 @@
+const mongoose = require("mongoose"); // ✅ Add this
 const Product = require("../models/product");
 const cloudinary = require("../config/cloudinary");
 
@@ -86,7 +87,34 @@ exports.getUserProducts = async (req, res) => {
 };
 
 
+exports.deleteProduct = async (req, res) => {
+  const { productId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    return res.status(400).json({ message: "Invalid product ID" });
+  }
+
+  try {
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Only allow the owner to delete
+    if (!product.sellerId || req.user.id !== product.sellerId.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // Use findByIdAndDelete instead of product.remove()
+    await Product.findByIdAndDelete(productId);
+
+    res.status(200).json({ message: "Product deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 
