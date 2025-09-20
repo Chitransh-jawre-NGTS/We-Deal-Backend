@@ -104,6 +104,26 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+exports.deleteChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ message: "Chat not found" });
+
+    // Optional: Check if the current user is part of the chat
+    if (!chat.users.includes(req.user.id)) {
+      return res.status(403).json({ message: "Not authorized to delete this chat" });
+    }
+
+    await Chat.findByIdAndDelete(chatId);
+
+    res.status(200).json({ message: "Chat deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 // const Chat = require("../models/chat");
