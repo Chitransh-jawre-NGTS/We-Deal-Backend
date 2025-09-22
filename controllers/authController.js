@@ -114,3 +114,83 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+// const User = require("../models/user");
+// const admin = require("../firebase");
+
+// // ✅ Verify Firebase ID token and login
+// exports.verifyOtp = async (req, res) => {
+//   try {
+//     const { idToken } = req.body;
+//     if (!idToken) return res.status(400).json({ message: "idToken is required" });
+
+//     // 🔹 Verify Firebase ID token
+//     const decoded = await admin.auth().verifyIdToken(idToken);
+//     const { uid, phone_number } = decoded;
+
+//     // 🔹 Check if user exists in MongoDB
+//     let user = await User.findOne({ uid });
+//     if (!user) {
+//       user = await User.create({ uid, phone: phone_number });
+//     }
+
+//     // 🔹 Generate your own JWT (same as before)
+//     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+//       expiresIn: "7d",
+//     });
+
+//     res.json({
+//       message: "Login successful",
+//       user,
+//       token, // <- your JWT, frontend continues to use this
+//     });
+//   } catch (err) {
+//     console.error("❌ Error verifying Firebase token:", err);
+//     res.status(401).json({ message: "Invalid or expired token" });
+//   }
+// };
+// // ✅ Profile routes remain same
+// exports.updateProfile = async (req, res) => {
+//   try {
+//     const userId = req.user?._id;
+//     const { name, email, aadhaarNumber } = req.body;
+//     const avatarUrl = req.file ? req.file.path : undefined;
+
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       { name, email, aadhaarNumber, ...(avatarUrl && { avatar: avatarUrl }) },
+//       { new: true }
+//     );
+
+//     res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Server error", error: err.message });
+//   }
+// };
+
+// exports.getProfile = async (req, res) => {
+//   try {
+//     const userId = req.user?._id;
+//     if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+//     const user = await User.findById(userId).select("-__v");
+//     if (!user) return res.status(404).json({ message: "User not found" });
+
+//     res.json(user);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };

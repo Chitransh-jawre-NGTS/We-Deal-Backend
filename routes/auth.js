@@ -30,3 +30,21 @@ router.put("/update/:id", upload.single("avatar"), updateProfile);
 router.get("/user/profile", authMiddleware, getProfile);
 
 module.exports = router;
+
+
+
+
+// const express = require("express");
+// const router = express.Router();
+// const upload = require("../middleware/upload");
+// const auth = require("../middleware/auth");// new middleware
+// const { verifyOtp, updateProfile, getProfile } = require("../controllers/authController");
+
+// // ✅ Verify Firebase ID token and login
+// router.post("/verify-otp", verifyOtp);
+
+
+// router.put("/update/:id", upload.single("avatar"), auth, updateProfile);
+// router.get("/user/profile", auth, getProfile);
+
+// module.exports = router;
