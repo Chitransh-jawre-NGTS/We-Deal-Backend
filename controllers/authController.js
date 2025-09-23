@@ -116,8 +116,33 @@ exports.getProfile = async (req, res) => {
 };
 
 
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    await User.findByIdAndDelete(userId);
+    return res.status(200).json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting account:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
-
+exports.deactivateAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { isActive: false },
+      { new: true }
+    );
+    return res
+      .status(200)
+      .json({ message: "Account deactivated successfully", user: updatedUser });
+  } catch (err) {
+    console.error("❌ Error deactivating account:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 

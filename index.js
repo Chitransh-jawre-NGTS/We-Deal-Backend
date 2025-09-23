@@ -88,9 +88,6 @@
 
 
 
-
-
-
 const express = require("express");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
@@ -109,13 +106,13 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// Enable CORS for REST APIs
+// Enable CORS
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",          // local dev
-      "https://we-deal-frontend.vercel.app", // vercel
-      "https://wedeal.netlify.app",     // netlify (your live site)
+      "http://localhost:5173",
+      "https://we-deal-frontend.vercel.app",
+      "https://wedeal.netlify.app",
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -138,7 +135,7 @@ app.use("/api", chatRoutes);
 // Create HTTP server
 const server = http.createServer(app);
 
-// Setup Socket.IO with same CORS
+// Setup Socket.IO
 const io = new Server(server, {
   cors: {
     origin: [
@@ -151,51 +148,57 @@ const io = new Server(server, {
 });
 
 // Socket.IO logic
-io.on("connection", (socket) => {
-  console.log("⚡ New client connected:", socket.id);
-
-  // ✅ Extract token from handshake auth
+io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
-  if (!token) return socket.disconnect();
+  if (!token) return next(new Error("No token provided"));
 
-  let userId;
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    userId = decoded.id;
+    socket.userId = decoded.id; // attach userId to socket
+    next();
   } catch (err) {
-    console.log("❌ Invalid token, disconnecting:", socket.id);
-    return socket.disconnect();
+    next(new Error("Invalid token"));
   }
+});
+
+io.on("connection", (socket) => {
+  console.log("⚡ New client connected:", socket.id, "User:", socket.userId);
 
   // Join chat room
   socket.on("joinChat", (chatId) => {
     socket.join(chatId);
-    console.log(`📥 User ${userId} joined chat ${chatId}`);
+    console.log(`📥 User ${socket.userId} joined chat ${chatId}`);
   });
 
-  // Handle sending messages
+  // Send message
   socket.on("sendMessage", async ({ chatId, text }) => {
+    if (!text || !text.trim()) return;
+
     try {
       const Message = require("./models/message");
       const Chat = require("./models/chat");
 
-      // ✅ Save message with authenticated userId
+      // Save message
       const message = await Message.create({
         chatId,
-        sender: userId,
-        text,
+        sender: socket.userId,
+        text: text.trim(),
       });
 
+      // Update lastMessage in chat
       await Chat.findByIdAndUpdate(chatId, { lastMessage: message._id });
 
+      // Emit message to room
       io.to(chatId).emit("receiveMessage", message);
     } catch (err) {
       console.error("❌ Error saving message:", err);
+      socket.emit("error", { message: "Failed to send message" });
     }
   });
 
-  socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", userId);
+  // Handle disconnect
+  socket.on("disconnect", (reason) => {
+    console.log("❌ User disconnected:", socket.userId, "Reason:", reason);
   });
 });
 

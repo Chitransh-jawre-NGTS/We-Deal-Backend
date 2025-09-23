@@ -6,32 +6,56 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  name: {           // Full name
+  name: {           
     type: String,
     default: "",
   },
-  email: {          // Email
+  email: {          
     type: String,
     default: "",
   },
-  avatar: {         // Profile picture URL (Cloudinary)
+  avatar: {         
     type: String,
     default: "",
   },
-  aadhaarNumber: {  // Aadhaar number
+  aadhaarNumber: {  
     type: String,
-    default: "",
+    default: null,   // Use null instead of empty string
     unique: true,
-    sparse: true, // allows null values to not conflict with unique constraint
+    sparse: true,    // Allows multiple nulls
   },
-  aadhaarDocument: { // Aadhaar image/document URL (Cloudinary)
-    type: String,
-    default: "",
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  isActive: {        // <-- New field for deactivation
+    type: Boolean,
+    default: true,
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+});
+
+// Pre-save hook to automatically set verified
+userSchema.pre("save", function (next) {
+  const user = this;
+
+  // verified only if all important fields are filled
+  if (
+    user.phone &&
+    user.name &&
+    user.email &&
+    user.avatar &&
+    user.aadhaarNumber 
+  ) {
+    user.verified = true;
+  } else {
+    user.verified = false;
+  }
+
+  next();
 });
 
 module.exports = mongoose.model("User", userSchema);
