@@ -22,5 +22,24 @@ const auth = async (req, res, next) => {
     console.error("Auth error:", err);
   }
 };
+// middleware/auth.js
+const admin = require("firebase-admin");
+admin.initializeApp({
+  credential: admin.credential.cert(require("../serviceAccountKey.json"))
+});
+
+module.exports = async (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    req.user = { email: decoded.email, uid: decoded.uid };
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
+
 
 module.exports = auth;

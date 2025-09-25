@@ -1,30 +1,28 @@
-
-
-
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
 const authMiddleware = require("../middleware/auth");
 const {
-  sendOtp,
-  verifyOtp,
+  loginWithFirebase,
   updateProfile,
-  getProfile,deleteAccount,deactivateAccount
+  getProfile,
+  deleteAccount,
+  deactivateAccount
 } = require("../controllers/authController");
 
-router.post("/send-otp", sendOtp);
-router.post("/verify-otp", verifyOtp);
-router.put("/update/:id", upload.single("avatar"), updateProfile);
+// ✅ Firebase login/signup
+router.post("/login-email", loginWithFirebase);
 
-// ✅ Get profile of logged-in user
+// ✅ Update profile (protected)
+router.put("/update/:id", authMiddleware, upload.single("avatar"), updateProfile);
+
+// ✅ Get profile
 router.get("/user/profile", authMiddleware, getProfile);
-// Delete account
+
+// ✅ Delete account
 router.delete("/user/delete", authMiddleware, deleteAccount);
 
-// Deactivate account
+// ✅ Deactivate account
 router.put("/user/deactivate", authMiddleware, deactivateAccount);
 
-
 module.exports = router;
-
-

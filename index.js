@@ -101,6 +101,7 @@ const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/productRoutes");
 const wishlistRoutes = require("./routes/wishlist");
 const chatRoutes = require("./routes/chat");
+const storeRoutes = require("./routes/storeRoutes");
 
 dotenv.config();
 const app = express();
@@ -115,7 +116,7 @@ app.use(
       "https://wedeal.netlify.app",
     ],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization","x-store-token"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   })
 );
@@ -131,6 +132,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", productRoutes);
 app.use("/api", wishlistRoutes);
 app.use("/api", chatRoutes);
+app.use("/api/store", storeRoutes);
 
 // Create HTTP server
 const server = http.createServer(app);
