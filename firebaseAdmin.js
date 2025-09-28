@@ -11,7 +11,8 @@
 
 // firebaseAdmin.js
 const admin = require("firebase-admin");
-const serviceAccount = require("./serviceAccountKey.json.json"); // adjust path
+
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 // ✅ Only initialize if not already initialized
 const app = admin.apps.length

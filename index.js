@@ -95,6 +95,9 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
+const cron = require("node-cron");
+
+const MobileAd = require("./models/storeMobile");
 
 // Routes
 const authRoutes = require("./routes/auth");
@@ -102,6 +105,8 @@ const productRoutes = require("./routes/productRoutes");
 const wishlistRoutes = require("./routes/wishlist");
 const chatRoutes = require("./routes/chat");
 const storeRoutes = require("./routes/storeRoutes");
+const storeMobileRoutes = require("./routes/storeMobileRoutes");
+const locationRoutes = require("./routes/location");
 
 dotenv.config();
 const app = express();
@@ -133,6 +138,10 @@ app.use("/api", productRoutes);
 app.use("/api", wishlistRoutes);
 app.use("/api", chatRoutes);
 app.use("/api/store", storeRoutes);
+app.use("/api/store", storeMobileRoutes);
+app.use("/api/location", locationRoutes);
+
+
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -162,6 +171,16 @@ io.use((socket, next) => {
     next(new Error("Invalid token"));
   }
 });
+
+
+cron.schedule("0 0 * * *", async () => {
+  const result = await MobileAd.updateMany(
+    { expiresAt: { $lte: new Date() }, status: "Active" },
+    { $set: { status: "Deactivated" } }
+  );
+  console.log(`Deactivated ${result.modifiedCount} expired ads`);
+});
+
 
 io.on("connection", (socket) => {
   console.log("⚡ New client connected:", socket.id, "User:", socket.userId);

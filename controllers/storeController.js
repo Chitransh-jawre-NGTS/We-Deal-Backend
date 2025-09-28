@@ -110,3 +110,13 @@ exports.storeLogin = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getStoreProfile = async (req, res) => {
+  try {
+    // req.store is attached from storeAuth middleware
+    res.status(200).json(req.store);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

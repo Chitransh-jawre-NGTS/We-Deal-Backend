@@ -182,6 +182,8 @@ exports.loginWithFirebase = async (req, res) => {
       if (name) userData.name = name; // optional
 
       user = await User.create(userData);
+      // ✅ Create empty UserProfile linked to this user
+  await UserProfile.create({ authUserId: user._id });
     }
 
     // Generate backend JWT
@@ -198,23 +200,70 @@ exports.loginWithFirebase = async (req, res) => {
 
 // ✅ Update profile
 // ✅ Update profile
+// exports.updateProfile = async (req, res) => {
+//   try {
+//     const authUserId = req.user._id; // get from JWT/auth middleware
+//     const { name, aadhaarNumber, phone } = req.body;
+//     const avatarUrl = req.file ? req.file.path : undefined;
+    
+
+//     // Debug log
+//     console.log("Updating profile:", { authUserId, name, aadhaarNumber, phone, avatarUrl });
+
+//     // Determine verified status
+//     const verified = !!(name && aadhaarNumber && phone && avatarUrl);
+
+//     // Update profile, create if not exist (upsert)
+//     const updatedProfile = await UserProfile.findOneAndUpdate(
+//       { authUserId },
+//       {
+//         name,
+//         aadhaarNumber,
+//         phone,
+//         ...(avatarUrl && { avatar: avatarUrl }),
+//         verified, // set verified explicitly
+//       },
+//       { new: true, runValidators: true, upsert: true, setDefaultsOnInsert: true }
+//     );
+
+//     res.status(200).json({
+//       message: "Profile updated successfully",
+//       profile: updatedProfile,
+//     });
+//   } catch (err) {
+//     console.error("Error updating profile:", err);
+
+//     // Handle duplicate key error
+//     if (err.code === 11000) {
+//       const field = Object.keys(err.keyPattern)[0];
+//       return res.status(400).json({
+//         message: `Duplicate value found for ${field}. Please use a different ${field}.`,
+//       });
+//     }
+
+//     res.status(500).json({ message: "Server error", error: err.message });
+//   }
+// };
 exports.updateProfile = async (req, res) => {
   try {
-    const authUserId = req.user._id; // safer to get from JWT/auth middleware
-    const { name, aadhaarNumber, phone } = req.body; 
+    const authUserId = mongoose.Types.ObjectId(req.user._id); 
+    const { name, aadhaarNumber, phone } = req.body;
     const avatarUrl = req.file ? req.file.path : undefined;
 
-    // Debug log
-    console.log("Updating profile:", { authUserId, name, aadhaarNumber, phone, avatarUrl });
+    // Get existing profile
+    const profile = await UserProfile.findOne({ authUserId });
+    const avatarToUse = avatarUrl || profile?.avatar || "";
 
-    // Update profile, create if not exist (upsert)
+    const verified = !!(name && aadhaarNumber && phone && avatarToUse);
+
     const updatedProfile = await UserProfile.findOneAndUpdate(
       { authUserId },
       {
         name,
         aadhaarNumber,
         phone,
-        ...(avatarUrl && { avatar: avatarUrl }),
+        avatar: avatarToUse,
+        verified,
       },
       { new: true, runValidators: true, upsert: true, setDefaultsOnInsert: true }
     );
@@ -225,18 +274,16 @@ exports.updateProfile = async (req, res) => {
     });
   } catch (err) {
     console.error("Error updating profile:", err);
-
-    // Check for duplicate key error (phone/aadhaar)
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern)[0];
       return res.status(400).json({
         message: `Duplicate value found for ${field}. Please use a different ${field}.`,
       });
     }
-
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 // ✅ Get profile
 exports.getProfile = async (req, res) => {

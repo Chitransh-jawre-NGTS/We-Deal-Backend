@@ -10,6 +10,7 @@ const upload = multer({ storage });
 
 // Public route - Register as store
 router.post("/register", upload.single("shopLogo"), storeController.createStore);
+router.get("/profile", storeMiddleware, storeController.getStoreProfile);
 
 // Login store
 router.post("/login", storeController.storeLogin);

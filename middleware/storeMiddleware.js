@@ -1,15 +1,22 @@
 const jwt = require("jsonwebtoken");
 const Store = require("../models/store");
-
 exports.storeMiddleware = async (req, res, next) => {
   try {
-    console.log("Store Middleware Invoked");
+    console.log("Auth middleware invoked");
+    console.log("Headers received:", req.headers);
 
-    // ✅ Get token from custom header
-    const token = req.headers["x-store-token"]; // instead of 'authorization'
-    if (!token) return res.status(401).json({ message: "No token provided" });
+    // ✅ Try multiple variations
+    const token =
+      req.headers["x-store-token"] ||
+      req.headers["X-Store-Token"] ||
+      (req.headers["authorization"] && req.headers["authorization"].split(" ")[1]);
 
-    // Verify token
+    console.log("Final token value:", token);
+
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -17,33 +24,20 @@ exports.storeMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    if (decoded.role !== "store") return res.status(403).json({ message: "Unauthorized" });
+    if (decoded.role !== "store") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
 
-    const storeId = decoded.id;
-
-    // Fetch store from DB
-    const store = await Store.findById(storeId);
+    const store = await Store.findById(decoded.id);
     if (!store || store.role !== "store") {
       return res.status(404).json({ message: "Store not found or invalid role" });
     }
 
-    // Check required profile fields
-    const requiredFields = ["shopName", "gstNumber", "address", "pincode", "city", "state"];
-    const missingFields = requiredFields.filter(field => !store[field]);
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        message: "Incomplete store profile",
-        missingFields,
-      });
-    }
-
-    // Attach store to request
     req.store = store;
     next();
-
   } catch (err) {
     console.error("Store Middleware Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
