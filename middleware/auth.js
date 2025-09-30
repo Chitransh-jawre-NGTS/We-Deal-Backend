@@ -25,7 +25,7 @@ const auth = async (req, res, next) => {
 // middleware/auth.js
 const admin = require("firebase-admin");
 admin.initializeApp({
-  credential: admin.credential.cert(require("../serviceAccountKey.json"))
+  credential: admin.credential.cert(require("/etc/secrets/serviceAccountKey.json"))
 });
 
 module.exports = async (req, res, next) => {

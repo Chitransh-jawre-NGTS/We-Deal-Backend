@@ -161,6 +161,8 @@ const admin = require("../firebaseAdmin"); // initialized Firebase Admin SDK
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const  UserProfile = require("../models/userprofile");
+const mongoose = require('mongoose');
+
 
 exports.loginWithFirebase = async (req, res) => {
   try {
@@ -246,7 +248,8 @@ exports.loginWithFirebase = async (req, res) => {
 // };
 exports.updateProfile = async (req, res) => {
   try {
-    const authUserId = mongoose.Types.ObjectId(req.user._id); 
+   const authUserId = new mongoose.Types.ObjectId(req.user._id);
+
     const { name, aadhaarNumber, phone } = req.body;
     const avatarUrl = req.file ? req.file.path : undefined;
 
