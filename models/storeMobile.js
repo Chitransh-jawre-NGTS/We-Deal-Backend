@@ -30,6 +30,18 @@
 // module.exports = mongoose.model("MobileAd", mobileAdSchema);
 
 // models/MobileAd.js
+
+
+
+
+
+
+
+
+
+
+
+
 const mongoose = require("mongoose");
 
 const mobileAdSchema = new mongoose.Schema(

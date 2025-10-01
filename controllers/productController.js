@@ -222,6 +222,20 @@ exports.createProduct = async (req, res) => {
       }
     }
 
+    // Check and update ad usage
+    const now = new Date();
+    if (adStats.freeAdsPosted < adStats.freeAdsLimit) {
+      adStats.freeAdsPosted += 1;
+    } else if (
+      adStats.paidAdsPosted < adStats.paidAdsLimit &&
+      adStats.paidPlanExpiry &&
+      adStats.paidPlanExpiry > now
+    ) {
+      adStats.paidAdsPosted += 1;
+    } else {
+      return res.status(403).json({ message: "No ads left. Please buy a plan." });
+    }
+
     // Create product
     const product = new Product({
       fields,
@@ -232,8 +246,7 @@ exports.createProduct = async (req, res) => {
     });
     await product.save();
 
-    // Increment free ad count
-    adStats.freeAdsPosted += 1;
+    // Save updated adStats
     await adStats.save();
 
     res.status(201).json({ message: "Product created", product });
@@ -241,6 +254,7 @@ exports.createProduct = async (req, res) => {
     res.status(500).json({ message: "Failed to create product", error: err.message });
   }
 };
+
 
 // Get user ad stats
 exports.getUserAdStats = async (req, res) => {
@@ -251,14 +265,23 @@ exports.getUserAdStats = async (req, res) => {
     const year = now.getFullYear();
 
     let adStats = await AdCount.findOne({ userId, month, year });
-
     if (!adStats) {
       adStats = await AdCount.create({ userId, month, year });
     }
 
+    const hasPaidPlan =
+      adStats.paidPlanExpiry &&
+      adStats.paidPlanExpiry > now &&
+      adStats.paidAdsPosted < adStats.paidAdsLimit;
+
     res.status(200).json({
       adsPosted: adStats.freeAdsPosted + adStats.paidAdsPosted,
-      adsLimit: adStats.freeAdsLimit, // you can also include paid limits if any
+      freeAdsLeft: Math.max(adStats.freeAdsLimit - adStats.freeAdsPosted, 0),
+      paidAdsLeft: hasPaidPlan
+        ? adStats.paidAdsLimit - adStats.paidAdsPosted
+        : 0,
+      hasPaidPlan,
+      planExpiry: adStats.paidPlanExpiry,
       plan: req.user.plan || "free",
     });
   } catch (err) {
@@ -269,7 +292,7 @@ exports.getUserAdStats = async (req, res) => {
 
 exports.activatePlan = async (req, res) => {
   try {
-    const userId = req.user.id; // from auth middleware
+    const userId = req.user.id;
     const { planType } = req.body;
 
     const now = new Date();
@@ -281,14 +304,12 @@ exports.activatePlan = async (req, res) => {
       adStats = await AdCount.create({ userId, month, year });
     }
 
-    // Set expiry to 30 days for all paid plans
+    // Expiry: 30 days
     const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    if (planType === "one-time") {
-      adStats.paidAdsLimit = (adStats.paidAdsLimit || 0) + 1; // allow 1 ad
-      adStats.paidPlanExpiry = expiryDate;
-    } else if (planType === "monthly") {
-      adStats.paidAdsLimit = 30; // allow multiple ads
+    if (planType === "one-time" || planType === "monthly") {
+      // ✅ Always just +1 paid ad
+      adStats.paidAdsLimit = (adStats.paidAdsLimit || 0) + 1;
       adStats.paidPlanExpiry = expiryDate;
     }
 
@@ -299,6 +320,7 @@ exports.activatePlan = async (req, res) => {
     res.status(500).json({ message: "Failed to activate plan", error: err.message });
   }
 };
+
 // Get all products
 exports.getAllProducts = async (req, res) => {
   try {

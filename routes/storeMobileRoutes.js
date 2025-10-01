@@ -19,4 +19,5 @@ router.patch("/deactivate/:adId", storeMiddleware, mobileAdController.deactivate
 router.delete("/delete/:adId", storeMiddleware, mobileAdController.deleteAd);
 
 
+
 module.exports = router;

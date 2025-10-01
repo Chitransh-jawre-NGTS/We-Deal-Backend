@@ -1,6 +1,6 @@
-const AdCount = require("../models/AdCount");
+    const AdCount = require("../models/AdCount");
 
-const checkAdLimit = async (req, res, next) => {
+   const checkAdLimit = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const now = new Date();
@@ -8,17 +8,17 @@ const checkAdLimit = async (req, res, next) => {
     const year = now.getFullYear();
 
     let adStats = await AdCount.findOne({ userId, month, year });
-
     if (!adStats) {
       adStats = await AdCount.create({ userId, month, year });
     }
 
-    // Check if paid plan is active
-   const hasPaidPlan = adStats.paidPlanExpiry
-  ? adStats.paidPlanExpiry > now // still valid
-  : adStats.paidAdsLimit > adStats.paidAdsPosted;
+    // Check if paid plan is active & has ads left
+    const hasPaidPlan =
+      adStats.paidPlanExpiry &&
+      adStats.paidPlanExpiry > now &&
+      adStats.paidAdsPosted < adStats.paidAdsLimit;
 
-    // Allow posting if free ads left OR paid plan is active
+    // Allow posting if free ads left OR paid plan valid
     if (adStats.freeAdsPosted < adStats.freeAdsLimit || hasPaidPlan) {
       req.adStats = adStats;
       return next();
@@ -35,4 +35,5 @@ const checkAdLimit = async (req, res, next) => {
   }
 };
 
-module.exports = checkAdLimit;
+
+    module.exports = checkAdLimit;

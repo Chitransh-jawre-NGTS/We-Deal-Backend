@@ -107,6 +107,7 @@ const chatRoutes = require("./routes/chat");
 const storeRoutes = require("./routes/storeRoutes");
 const storeMobileRoutes = require("./routes/storeMobileRoutes");
 const locationRoutes = require("./routes/location");
+const BannerAdRoutes = require("./routes/BannerAds");
 
 dotenv.config();
 const app = express();
@@ -119,6 +120,7 @@ app.use(
       "http://localhost:5173",
       "https://we-deal-frontend.vercel.app",
       "https://wedeal.netlify.app",
+      "https://wedealsindia.netlify.app/"
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization","x-store-token"],
@@ -140,6 +142,7 @@ app.use("/api", chatRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/store", storeMobileRoutes);
 app.use("/api/location", locationRoutes);
+app.use("/api/ads", BannerAdRoutes);
 
 
 
