@@ -120,7 +120,7 @@ app.use(
       "http://localhost:5173",
       "https://we-deal-frontend.vercel.app",
       "https://wedeal.netlify.app",
-      "https://wedealsindia.netlify.app/"
+      "https://wedealsindia.netlify.app"
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization","x-store-token"],
