@@ -156,6 +156,7 @@ const io = new Server(server, {
       "http://localhost:5173",
       "https://we-deal-frontend.vercel.app",
       "https://wedeal.netlify.app",
+      "https://wedealsindia.netlify.app"
     ],
     methods: ["GET", "POST"],
   },
