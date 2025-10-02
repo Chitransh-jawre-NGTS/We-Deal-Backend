@@ -7,10 +7,16 @@ const adCountSchema = new mongoose.Schema({
   freeAdsPosted: { type: Number, default: 0 },
   freeAdsLimit: { type: Number, default: 3 },
 
-  // Paid ads
-  paidAdsPosted: { type: Number, default: 0 },
-  paidAdsLimit: { type: Number, default: 1 },      // total ads allowed in plan
-  paidPlanExpiry: { type: Date },                  // expiry for paid plan
+  // Base ads (paid, non-featured)
+  baseAdsPosted: { type: Number, default: 0 },
+  baseAdsLimit: { type: Number, default: 0 },
+
+  // Premium ads (paid, featured)
+  premiumAdsPosted: { type: Number, default: 0 },
+  premiumAdsLimit: { type: Number, default: 0 },
+
+  // Paid plan expiry (applies to both base & premium)
+  paidPlanExpiry: { type: Date },
 
   // Month/Year of count
   month: { type: Number, required: true },

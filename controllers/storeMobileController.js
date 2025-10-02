@@ -1,5 +1,7 @@
 const MobileAd = require("../models/storeMobile");
 const cloudinary = require("../config/cloudinary");
+const Store = require("../models/store"); 
+
 const mongoose = require("mongoose");
 
 // Helper to upload a single file buffer to Cloudinary
@@ -54,9 +56,6 @@ exports.createMobileAd = async (req, res) => {
       }
     }
 
-    // Determine if product should be featured
-    const isFeatured = price > 20000;
-
     // Set expiration date 30 days from now
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
@@ -72,7 +71,6 @@ exports.createMobileAd = async (req, res) => {
       description,
       images: uploadedImages,
       status: "Active",
-      featured: isFeatured,
       expiresAt,
     });
 
@@ -82,6 +80,7 @@ exports.createMobileAd = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 
 
@@ -110,16 +109,36 @@ exports.getStoreAds = async (req, res) => {
   }
 };
 
-// Get all active ads (public)
 exports.getAllAds = async (req, res) => {
   try {
-    const ads = await MobileAd.find({ status: "Active" }).sort({ createdAt: -1 });
-    res.status(200).json({ ads });
+    const ads = await MobileAd.find({ status: "Active" }).sort({ createdAt: -1 }).lean();
+
+    const adsWithStore = await Promise.all(
+      ads.map(async (ad) => {
+        const store = await Store.findById(ad.storeId).lean(); 
+        return {
+          ...ad,
+          store: store
+            ? {
+                _id: store._id,
+                name: store.shopName,      // map shopName → name
+                logo: store.shopLogo || "", // map shopLogo → logo
+                trusted: store.isActive,    // use isActive for trusted
+                location: `${store.city}, ${store.state}` || "",
+                description: store.address || "",
+              }
+            : null,
+        };
+      })
+    );
+
+    res.status(200).json({ ads: adsWithStore });
   } catch (err) {
     console.error("Get All Ads Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 // Deactivate a mobile ad

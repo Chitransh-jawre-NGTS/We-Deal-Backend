@@ -1,8 +1,9 @@
-    const AdCount = require("../models/AdCount");
+const AdCount = require("../models/AdCount");
 
-   const checkAdLimit = async (req, res, next) => {
+const checkAdLimit = async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const planType = req.body?.planType || "base"; // ✅ optional chaining
     const now = new Date();
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
@@ -12,28 +13,32 @@
       adStats = await AdCount.create({ userId, month, year });
     }
 
-    // Check if paid plan is active & has ads left
-    const hasPaidPlan =
-      adStats.paidPlanExpiry &&
-      adStats.paidPlanExpiry > now &&
-      adStats.paidAdsPosted < adStats.paidAdsLimit;
+    if (planType === "premium") {
+      const hasPaidPlan = adStats.paidPlanExpiry && adStats.paidPlanExpiry > now;
+      const paidAdsLeft = hasPaidPlan ? (adStats.premiumAdsLimit || 0) - (adStats.premiumAdsPosted || 0) : 0;
 
-    // Allow posting if free ads left OR paid plan valid
-    if (adStats.freeAdsPosted < adStats.freeAdsLimit || hasPaidPlan) {
-      req.adStats = adStats;
-      return next();
+      if (!hasPaidPlan || paidAdsLeft <= 0) {
+        return res.status(403).json({
+          message: "No paid ads left. Please activate a paid plan.",
+          redirectTo: "/billing",
+        });
+      }
+    } else {
+      const freeAdsLeft = (adStats.freeAdsLimit || 0) - (adStats.freeAdsPosted || 0);
+      if (freeAdsLeft <= 0) {
+        return res.status(403).json({
+          message: "No free ads left. Please activate a paid plan.",
+          redirectTo: "/billing",
+        });
+      }
     }
 
-    // Otherwise block and redirect to billing
-    return res.status(403).json({
-      message: "Ad limit reached. Please select a plan to continue.",
-      redirectTo: "/billing",
-    });
+    req.adStats = adStats;
+    next();
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error checking ad limit" });
+    console.error("Error in checkAdLimit middleware:", err);
+    res.status(500).json({ message: "Error checking ad limit", error: err.message });
   }
 };
 
-
-    module.exports = checkAdLimit;
+module.exports = checkAdLimit;

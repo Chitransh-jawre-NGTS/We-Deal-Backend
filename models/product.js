@@ -31,25 +31,23 @@
 // productSchema.index({ location: "2dsphere" });
 
 // module.exports = mongoose.model("Product", productSchema);
-
-
 const mongoose = require("mongoose");
 
 function arrayLimit(val) {
-  return val.length <= 3; // Max 8 images allowed
+  return val.length <= 3; // Max 3 images allowed
 }
 
 const productSchema = new mongoose.Schema(
   {
     category: { type: String, required: true },
 
-    // Store extra details dynamically (like title, description, price, etc.)
+    // Store extra details dynamically
     fields: { type: Object, required: true },
 
     // Product images
     images: {
       type: [String],
-      validate: [arrayLimit, "{PATH} exceeds the limit of 8"],
+      validate: [arrayLimit, "{PATH} exceeds the limit of 3"],
     },
 
     // User who posted the product
@@ -59,11 +57,17 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Featured / premium ad
+    featured: { type: Boolean, default: false },
+
+    // Plan type (base / premium)
+    planType: { type: String, enum: ["base", "premium"], default: "base" },
+
     // Location data (GeoJSON format)
     location: {
       type: {
         type: String,
-        enum: ["Point"], // Required by GeoJSON
+        enum: ["Point"],
         default: "Point",
       },
       coordinates: {
@@ -82,21 +86,19 @@ const productSchema = new mongoose.Schema(
     // Expiry date (default: 30 days from creation)
     expiryDate: {
       type: Date,
-      default: () => new Date(+new Date() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      default: () => new Date(+new Date() + 30 * 24 * 60 * 60 * 1000),
     },
   },
-  {
-    timestamps: true, // auto adds createdAt & updatedAt
-  }
+  { timestamps: true }
 );
 
-// ✅ Index for fast location queries
+// Index for fast location queries
 productSchema.index({ location: "2dsphere" });
 
-// Auto-expire middleware
+// Auto-set expiry date if missing
 productSchema.pre("save", function (next) {
   if (!this.expiryDate) {
-    this.expiryDate = new Date(+new Date() + 30 * 24 * 60 * 60 * 1000); // Default 30 days
+    this.expiryDate = new Date(+new Date() + 30 * 24 * 60 * 60 * 1000);
   }
   next();
 });
