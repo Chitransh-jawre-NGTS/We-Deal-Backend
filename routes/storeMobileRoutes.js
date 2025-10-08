@@ -19,5 +19,10 @@ router.patch("/deactivate/:adId", storeMiddleware, mobileAdController.deactivate
 router.delete("/delete/:adId", storeMiddleware, mobileAdController.deleteAd);
 
 
+// Plan management
+router.post("/plans/activate-plan", storeMiddleware, mobileAdController.activateStorePlan);
+router.get("/plans/ad-stats", storeMiddleware, mobileAdController.getStoreAdStats);
+
+
 
 module.exports = router;

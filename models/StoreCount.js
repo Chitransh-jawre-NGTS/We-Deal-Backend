@@ -1,23 +1,23 @@
-const storeCountSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+const mongoose = require("mongoose");
 
-  // Free mobile ads
-  freeAdsPosted: { type: Number, default: 0 },
-  freeAdsLimit: { type: Number, default: 3 },
+const mobileAdCountSchema = new mongoose.Schema(
+  {
+    storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
+    month: { type: Number, required: true },
+    year: { type: Number, required: true },
 
-  // Paid mobile ads
-  paidAdsPosted: { type: Number, default: 0 },
-  paidAdsLimit: { type: Number, default: 0 },
-  paidPlanExpiry: { type: Date },
+    // Limits
+    freeAdsLimit: { type: Number, default: 10 },
+    premiumAdsLimit: { type: Number, default: 0 },
 
-  // Free store listings
-  freeStoresPosted: { type: Number, default: 0 },
-  freeStoresLimit: { type: Number, default: 5 },
+    // Usage counters
+    freeAdsPosted: { type: Number, default: 0 },
+    premiumAdsPosted: { type: Number, default: 0 },
 
-  // Paid stores
-  paidStoresPosted: { type: Number, default: 0 },
-  paidStoresLimit: { type: Number, default: 0 },
+    // Plan expiry
+    paidPlanExpiry: { type: Date, default: null },
+  },
+  { timestamps: true }
+);
 
-  month: { type: Number, required: true },
-  year: { type: Number, required: true },
-}, { timestamps: true });
+module.exports = mongoose.model("MobileAdCount", mobileAdCountSchema);

@@ -33,7 +33,7 @@ exports.createBanner = async (req, res) => {
     if (!store) return res.status(403).json({ message: "Store not verified" });
 
     // Calculate impressions
-    const totalImpressions = Math.floor((amount / 10) * 10000);
+    const totalImpressions = Math.floor((amount / 20) * 1000);
 
     // Set expiry date (1 month)
     const expiryDate = new Date();

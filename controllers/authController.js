@@ -160,7 +160,9 @@
 const admin = require("../firebaseAdmin"); // initialized Firebase Admin SDK
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const  UserProfile = require("../models/userprofile");
+// in chatController.js
+const UserProfile = require("../models/UserProfile");
+
 const mongoose = require('mongoose');
 
 
@@ -339,3 +341,5 @@ exports.deactivateAccount = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
